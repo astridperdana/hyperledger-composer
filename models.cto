@@ -1,0 +1,85 @@
+
+
+namespace org.acme.hospital.health
+
+
+enum ProductType {
+  o JASADOKTER
+  o OBAT
+}
+
+
+enum PasienStatus {
+  o BARU
+  o SELESAI
+}
+
+
+abstract transaction OrderTransaction {
+  --> Order order
+}
+
+
+transaction Transaksi extends OrderTransaction {
+  o Double value
+  o String namaUnit
+  o Double price
+  o String catagory
+}
+
+
+transaction OrderSelesai extends OrderTransaction {
+}
+
+
+asset Order identified by orderId {
+  o String orderId
+  o ProductType type
+  o PasienStatus status
+  o Long jumlahUnit
+  o Transaksi[] transaksi optional
+  o Double hargaJasa
+  --> Contract contract
+}
+
+
+asset Contract identified by contractId {
+  o String contractId
+  --> Dokter dokter
+  --> Apotek apotek
+  --> Pasien pasien
+  o DateTime tanggal
+}
+
+
+concept Address {
+  o String city optional
+  o String country
+  o String street optional
+  o String zip optional
+}
+
+/**
+ * An abstract participant type in this business network
+ */
+abstract participant Business identified by email {
+  o String email
+  o Address address
+  o Double accountBalance
+}
+
+
+participant Dokter extends Business {
+}
+
+
+participant Apotek extends Business {
+}
+
+
+participant Pasien extends Business {
+}
+
+
+transaction SetupDemo {
+}
