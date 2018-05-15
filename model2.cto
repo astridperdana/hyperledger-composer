@@ -1,0 +1,170 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+namespace org.acme.data.pasien
+
+enum JenisObat {
+  o antibiotik
+  o obatBatuk
+  o obatPilek
+  o obatBius  
+}
+
+enum JenisTesLab {
+  o MRI
+  o diabetes
+  o kolesterol
+  o paruparu
+  o tekananDarah
+}
+
+enum Status {
+  o SELESAI
+  o PROSES
+}
+
+
+
+abstract transaction contractTransaction {
+  --> Contract contract
+}
+
+//Resep obat dari dokter
+transaction ResepObat extends contractTransaction {
+  o String ResepObatid  
+  o JenisObat jenis
+  o Integer jumlah
+}
+
+//lab visit dari dokter
+transaction ResepLab extends contractTransaction {
+  o String ResepaLabid  
+  o JenisTesLab jenis
+}
+
+// aset rekam medik
+// rekam medik hanya kontrak awal pasien dengan puskesmas
+// untuk pasien dengan dokter dibedakan transaksi
+asset Contract identified by contractId {
+  o String contractId
+  --> Poli poli
+  --> Dokter dokter
+  --> Apotek apotek
+  --> Pasien pasien
+  o ResepObat[] obat optional
+  o ResepLab[] lab optional
+  o DateTime tanggal
+  o Status statusResepObat
+  o Status statusResepLab
+  o Status status
+}
+
+asset stockObatApotek identified by idObatApotek {
+  o String idObatApotek
+  --> Apotek apotek
+  o JenisObat jenis
+  o Integer jumlah
+}
+
+asset stockObatPasien identified by idObatPasien {
+  o String idObatPasien
+  --> Apotek apotek
+  --> Pasien pasien
+  o JenisObat jenis
+  o Integer jumlah
+}
+
+asset checkLab identified by idCheckLab {
+  o String idCheckLab
+  --> Laboratorium laboratorium
+  --> Pasien pasien
+  o JenisTesLab jenis
+}
+
+abstract transaction checkLabTransaction {
+  --> Contract contract
+  --> checkLab checklab
+}
+
+abstract transaction beliObatTransaction {
+  --> Contract contract
+  --> stockObatApotek stockApotek
+  --> stockObatPasien stockPasien
+}
+
+abstract transaction minumObatTransaction {
+  --> stockObatApotek stockApotek
+  --> stockObatPasien stockPasien
+}
+
+//beli obat pasien
+transaction OrderLab extends checkLabTransaction {
+  o String orderLabid
+  o JenisTesLab jenis
+  o DateTime waktu
+}
+
+//pasien check lab
+transaction OrderObat extends beliObatTransaction {
+  o String orderObatid
+  o JenisObat jenis
+  o Integer jumlah
+  o DateTime waktu
+}
+
+//pasien minum obat
+transaction pasienMinumObat extends minumObatTransaction {
+  o String orderObatid
+  o JenisObat jenis
+  o Integer jumlah
+}
+
+
+
+
+concept Address {
+  o String city optional
+  o String country
+  o String street optional
+  o String zip optional
+}
+
+abstract participant Business identified by email {
+  o String email
+  o Address address
+}
+
+abstract participant Person identified by NIK {
+  o String NIK
+  o String Nama
+}
+
+// bisnis dengan person dibedakan contoh seperti poli dengan dokter
+participant Poli extends Business {
+  o String spesialis
+}
+
+
+participant Apotek extends Business {
+}
+
+participant Laboratorium extends Business {
+  o String jenisLab
+}
+
+participant Pasien extends Person {
+}
+
+participant Dokter extends Person {
+}
